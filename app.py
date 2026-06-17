@@ -75,6 +75,7 @@ def handle_query(user_query: str, wardrobe_choice: str) -> tuple[str, str, str]:
         f"Style:     {', '.join(item.get('style_tags', []))}\n"
         f"ID:        {item['id']}"
     )
+    print(item['title'], session["outfit_suggestion"], session["fit_card"])
  
     return listing_text, session["outfit_suggestion"], session["fit_card"]
 
