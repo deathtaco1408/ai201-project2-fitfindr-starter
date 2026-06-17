@@ -213,4 +213,42 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
     Before writing code, fill in the Tool 3 section of planning.md.
     """
     # Replace this with your implementation
-    return ""
+
+    # Guard against empty outfit string
+    if not outfit or not outfit.strip():
+        return (
+            f"Couldn't generate a full fit card — outfit suggestion was unavailable. "
+            f"But check out {new_item.get('title', 'this item')} for ${new_item.get('price', '?')} "
+            f"on {new_item.get('platform', 'secondhand')}."
+        )
+ 
+    prompt = f"""You are writing a casual, authentic Instagram/TikTok OOTD caption for a thrifted outfit.
+ 
+                Thrifted item details:
+                - Name: {new_item['title']}
+                - Price: ${new_item['price']}
+                - Platform: {new_item['platform']}
+                - Condition: {new_item.get('condition', 'good')}
+                - Colors: {', '.join(new_item.get('colors', []))}
+                - Style: {', '.join(new_item.get('style_tags', []))}
+ 
+                Outfit suggestion:
+                {outfit}
+ 
+                Write a 2–4 sentence caption that:
+                - Sounds like a real person posting an OOTD (casual, not like a product listing)
+                - Mentions the item name, price, and platform naturally — each exactly once
+                - Describes the outfit vibe in specific, vivid terms
+                - Feels fresh and different from a generic fashion post
+ 
+                Write only the caption. No hashtags. No preamble."""
+ 
+    client = _get_groq_client()
+    response = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.9,  # Higher temperature for more varied output
+        max_tokens=200,
+    )
+    return response.choices[0].message.content.strip()
+
