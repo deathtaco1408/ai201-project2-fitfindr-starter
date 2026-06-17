@@ -73,6 +73,7 @@ def search_listings(
     return []
 
 
+
 # ── Tool 2: suggest_outfit ────────────────────────────────────────────────────
 
 def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
