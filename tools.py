@@ -172,7 +172,7 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
  
         Suggest 1–2 complete outfits that pair the new item with specific pieces from their wardrobe. Reference each wardrobe piece by name and ID (e.g. "baggy straight-leg jeans [w_001]"). Describe the overall vibe of each outfit in 1 sentence."""
  
-        response = client.chat.completions.create(
+    response = client.chat.completions.create(
         model="llama3-8b-8192",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
