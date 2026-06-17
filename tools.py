@@ -173,7 +173,7 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
         Suggest 1–2 complete outfits that pair the new item with specific pieces from their wardrobe. Reference each wardrobe piece by name and ID (e.g. "baggy straight-leg jeans [w_001]"). Describe the overall vibe of each outfit in 1 sentence."""
  
     response = client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
         max_tokens=400,
@@ -245,7 +245,7 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
  
     client = _get_groq_client()
     response = client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.9,  # Higher temperature for more varied output
         max_tokens=200,
