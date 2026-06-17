@@ -70,7 +70,42 @@ def search_listings(
     Before writing code, fill in the Tool 1 section of planning.md.
     """
     # Replace this with your implementation
-    return []
+    listings = load_listings()
+ 
+    # Step 1: Filter by max_price
+    if max_price is not None:
+        listings = [l for l in listings if l["price"] <= max_price]
+ 
+    # Step 2: Filter by size (case-insensitive substring match)
+    if size is not None:
+        size_lower = size.lower()
+        listings = [
+            l for l in listings
+            if size_lower in l["size"].lower()
+        ]
+ 
+    # Step 3: Score each listing by keyword overlap with description
+    keywords = set(description.lower().split())
+ 
+    def score(listing):
+        searchable = " ".join([
+            listing["title"],
+            listing.get("description", ""),
+            listing["category"],
+            " ".join(listing.get("style_tags", [])),
+            " ".join(listing.get("colors", [])),
+            listing.get("brand") or "",
+        ]).lower()
+        return sum(1 for kw in keywords if kw in searchable)
+ 
+    scored = [(score(l), l) for l in listings]
+ 
+    # Step 4: Drop listings with score of 0
+    scored = [(s, l) for s, l in scored if s > 0]
+ 
+    # Step 5: Sort by score descending and return listing dicts
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [l for _, l in scored]
 
 
 
@@ -102,7 +137,50 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
     Before writing code, fill in the Tool 2 section of planning.md.
     """
     # Replace this with your implementation
-    return ""
+    client = _get_groq_client()
+    wardrobe_items = wardrobe.get("items", [])
+ 
+    if not wardrobe_items:
+        # Empty wardrobe: ask for general styling advice
+        prompt = f"""You are a fashion stylist. A user is considering buying this secondhand item:
+ 
+        Item: {new_item['title']}
+        Category: {new_item['category']}
+        Colors: {', '.join(new_item.get('colors', []))}
+        Style tags: {', '.join(new_item.get('style_tags', []))}
+        Condition: {new_item.get('condition', 'unknown')}
+ 
+        They don't have a saved wardrobe yet. Suggest 1–2 complete outfits using common wardrobe staples that would pair well with this item. Be specific about pieces (e.g. "straight-leg jeans", "white sneakers") and describe the overall vibe."""
+ 
+    else:
+        # Format wardrobe items for the prompt
+        wardrobe_text = "\n".join([
+            f"- [{item['id']}] {item['name']} ({item['category']}, colors: {', '.join(item['colors'])}, tags: {', '.join(item['style_tags'])})"
+            + (f" — {item['notes']}" if item.get('notes') else "")
+            for item in wardrobe_items
+        ])
+ 
+        prompt = f"""You are a fashion stylist. A user is considering buying this secondhand item:
+ 
+        New item: {new_item['title']}
+        Category: {new_item['category']}
+        Colors: {', '.join(new_item.get('colors', []))}
+        Style tags: {', '.join(new_item.get('style_tags', []))}
+ 
+        Their current wardrobe:
+        {wardrobe_text}
+ 
+        Suggest 1–2 complete outfits that pair the new item with specific pieces from their wardrobe. Reference each wardrobe piece by name and ID (e.g. "baggy straight-leg jeans [w_001]"). Describe the overall vibe of each outfit in 1 sentence."""
+ 
+        response = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+        max_tokens=400,
+    )
+    
+    return response.choices[0].message.content.strip()
+
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
